@@ -5,6 +5,8 @@ from writer_agent import writer_agent, ReportData
 from email_agent import email_agent
 from query_enrichment import generate_clarifying_questions, enrich_query_with_answers
 from clarification_agent import ClarificationQuestions, EnrichedQuery
+from report_evaluation import evaluate_report, evaluate_with_feedback
+from evaluator_agent import EvaluationResult
 import asyncio
 
 class ResearchManager:
@@ -15,6 +17,18 @@ class ResearchManager:
         questions = await generate_clarifying_questions(query)
         print(f"Generated {len(questions.questions)} clarifying questions")
         return questions
+
+    async def evaluate_report_quality(
+        self,
+        query: str,
+        report: ReportData,
+        enriched: EnrichedQuery | None = None
+    ) -> tuple[EvaluationResult, str]:
+        """ Evaluate a research report and return evaluation with feedback """
+        print("Evaluating report quality...")
+        evaluation, feedback = await evaluate_with_feedback(query, report, enriched)
+        print(f"Evaluation: {evaluation.decision} (Score: {evaluation.scores.average_score:.1f}/10)")
+        return evaluation, feedback
 
     async def run_with_clarification(self, query: str, questions: ClarificationQuestions, user_answers: list[str]):
         """ Run the deep research process with clarification questions """
@@ -47,10 +61,19 @@ class ResearchManager:
             yield "Searches complete, writing comprehensive report..."
             report = await self.write_report(enriched.enriched_context, search_results)
 
-            yield "Report written, sending email..."
-            await self.send_email(report)
+            yield "Report written, evaluating quality..."
+            evaluation, feedback = await evaluate_with_feedback(query, report, enriched)
 
-            yield "Email sent, research complete"
+            yield f"Evaluation complete: {evaluation.decision} (Score: {evaluation.scores.average_score:.1f}/10)"
+            yield feedback
+
+            if evaluation.is_approved:
+                yield "Report approved! Sending email..."
+                await self.send_email(report)
+                yield "Email sent, research complete"
+            else:
+                yield f"Report needs improvement (Score: {evaluation.scores.average_score:.1f}/10). Review feedback above."
+
             yield report.markdown_report
 
     async def run(self, query: str):
@@ -65,9 +88,20 @@ class ResearchManager:
             search_results = await self.perform_searches(search_plan)
             yield "Searches complete, writing report..."
             report = await self.write_report(query, search_results)
-            yield "Report written, sending email..."
-            await self.send_email(report)
-            yield "Email sent, research complete"
+
+            yield "Report written, evaluating quality..."
+            evaluation, feedback = await evaluate_with_feedback(query, report, None)
+
+            yield f"Evaluation complete: {evaluation.decision} (Score: {evaluation.scores.average_score:.1f}/10)"
+            yield feedback
+
+            if evaluation.is_approved:
+                yield "Report approved! Sending email..."
+                await self.send_email(report)
+                yield "Email sent, research complete"
+            else:
+                yield f"Report needs improvement (Score: {evaluation.scores.average_score:.1f}/10). Review feedback above."
+
             yield report.markdown_report
         
 
