@@ -36,10 +36,15 @@ class ClarificationQuestions(BaseModel):
     )
 
 
+class QAPair(BaseModel):
+    question: str = Field(description="The clarifying question")
+    answer: str = Field(description="The user's answer")
+
+
 class EnrichedQuery(BaseModel):
     original_query: str = Field(description="The original user query")
-    clarifying_qa: list[dict[str, str]] = Field(
-        description="List of Q&A pairs from clarification. Each dict has 'question' and 'answer' keys"
+    clarifying_qa: list[QAPair] = Field(
+        description="List of Q&A pairs from clarification"
     )
     enriched_context: str = Field(
         description="A comprehensive research brief combining the original query with answers to clarifying questions"

@@ -4,7 +4,7 @@ This helps create better research context for downstream agents.
 """
 
 from agents import Agent, Runner
-from clarification_agent import ClarificationQuestions, EnrichedQuery
+from clarification_agent import ClarificationQuestions, EnrichedQuery, QAPair
 
 ENRICHMENT_INSTRUCTIONS = """You are a research context synthesizer.
 
@@ -84,7 +84,11 @@ Please synthesize this into a comprehensive research brief."""
 
     # Ensure original data is preserved
     enriched.original_query = original_query
-    enriched.clarifying_qa = qa_pairs
+    # Convert dict pairs to QAPair objects
+    enriched.clarifying_qa = [
+        QAPair(question=qa['question'], answer=qa['answer'])
+        for qa in qa_pairs
+    ]
 
     return enriched
 
