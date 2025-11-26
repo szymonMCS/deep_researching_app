@@ -10,9 +10,7 @@ from planner_agent import planner_agent, WebSearchPlan
 from search_agent import search_agent
 from writer_agent import writer_agent, ReportData
 from evaluator_agent import evaluator_agent, EvaluationResult
-from clarification_agent import clarification_agent, ClarificationQuestions
-from query_enrichment import enrich_query_with_answers
-from clarification_agent import EnrichedQuery
+from clarification_agent import clarification_agent, ClarificationQuestions, EnrichedQuery
 
 
 @function_tool
@@ -40,7 +38,6 @@ async def generate_clarification_questions(query: str) -> str:
 
     return output
 
-
 @function_tool
 async def enrich_query_context(original_query: str, qa_pairs_json: str) -> str:
     """
@@ -54,18 +51,21 @@ async def enrich_query_context(original_query: str, qa_pairs_json: str) -> str:
         Enriched research context with key focus areas
     """
     import json
+    from clarification_agent import QAPair
+    from query_utils import build_enriched_query_object
 
-    qa_pairs = json.loads(qa_pairs_json)
-    enriched = await enrich_query_with_answers(original_query, qa_pairs)
+    # Parse JSON to QAPair objects
+    qa_dicts = json.loads(qa_pairs_json)
+    qa_pairs = [QAPair(question=qa['question'], answer=qa['answer']) for qa in qa_dicts]
 
-    output = f"""Enriched Research Context:
-{enriched.enriched_context}
+    # Use utility to build enriched query (no AI needed)
+    enriched = build_enriched_query_object(original_query, qa_pairs)
 
-Key Focus Areas:
-"""
-    for area in enriched.key_focus_areas:
-        output += f"- {area}\n"
-
+    # Format as readable string
+    output = f"Enriched Context:\n{enriched.enriched_context}\n\n"
+    output += "Key Focus Areas:\n"
+    for i, area in enumerate(enriched.key_focus_areas, 1):
+        output += f"{i}. {area}\n"
     output += f"\nSuggested Scope: {enriched.suggested_scope}"
 
     return output
