@@ -1,6 +1,6 @@
 import gradio as gr
 from dotenv import load_dotenv
-from research_manager import ResearchManager
+from coordinator_workflow import CoordinatorWorkflow
 
 load_dotenv(override=True)
 
@@ -21,7 +21,7 @@ async def run(stored_query: str, answer1: str, answer2: str, answer3: str):
     user_answers = [answer1, answer2, answer3]
     questions = _questions_cache[stored_query]
 
-    async for chunk in ResearchManager().run(stored_query, questions, user_answers):
+    async for chunk in CoordinatorWorkflow().run(stored_query, questions, user_answers):
         yield chunk
 
 
@@ -30,7 +30,7 @@ async def generate_questions(query: str):
     if not query.strip():
         return "Please enter a research query first.", "", "", "", query
 
-    questions = await ResearchManager().get_clarifying_questions(query)
+    questions = await CoordinatorWorkflow().get_clarifying_questions(query)
 
     # Cache questions for later use
     _questions_cache[query] = questions
