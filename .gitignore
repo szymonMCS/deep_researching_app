@@ -50,3 +50,7 @@ htmlcov/
 
 # Project specific
 CHANGELOG.md
+
+# Instrukcje (recipe-style documentation)
+INSTRUKCJA_*.md
+demo_*.py
