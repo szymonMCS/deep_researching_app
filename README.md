@@ -1,3 +1,15 @@
+---
+title: Deep Research Agent
+emoji: 🔬
+colorFrom: blue
+colorTo: sky
+sdk: gradio
+sdk_version: 5.34.2
+app_file: app.py
+python_version: "3.12"
+pinned: false
+---
+
 # Deep Research Agent
 
 An AI-powered deep research application built with OpenAI Agents SDK. This application performs comprehensive web research on any topic by orchestrating multiple specialized AI agents.
